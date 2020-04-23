@@ -1,0 +1,9 @@
+[Desktop Entry]
+Name=ccryptmenu
+GenericName=ccrypt Menu
+Comment=ccrypt CLI program
+Exec=ccryptmenu
+Icon=ccryptmenuicon
+Categories=System
+Type=Application
+Terminal=true

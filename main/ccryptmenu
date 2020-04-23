@@ -1,0 +1,261 @@
+#!/bin/bash
+
+#========================= HEADER ======================================
+#Title : cylonmenu
+#Description: wrapper for ccrypt , bash
+#License: see license.md 
+#Written by Gavin lyons 
+#Software repo: https://github.com/gavinlyonsrepo/ccryptmenu
+
+#======================= GLOBAL VARIABLES   ============================
+LIBPATH="/usr/lib/bashmultitool/"
+
+# Path for config file
+CONFIGPATH="$HOME/.config/ccryptmenu/"
+CONFIGFILE="ccryptmenu.cfg"
+mkdir -p "$CONFIGPATH"
+
+MYCCFILE=""
+
+# Prompt for select menus
+PS3="$(printf "\033[36;1m")By your command:$(printf "\033[0m")"
+
+# check if $EDITOR Environmental variable is set if not set it to nano
+# used for modifying config files
+[ -z "${EDITOR}" ] && EDITOR="nano"
+
+#===================== LIBS ============================================
+for MYFILE in "$LIBPATH"*;
+do
+	source "$MYFILE"
+done
+
+# ==================== FUNCTIONS =======================================
+
+# FUNCTION NAME : ccryptFunc
+# DESCRIPTION : Main Function to use ccrypt encrypt and decrypt files
+function ccryptFunc
+{
+while true; do
+	PrintScreenFunc
+	bmtPrintFunc norm "Do you want to use the path(MYCCFILE) defined in Config file  [y/n/q]"
+	#if bmtPrintFunc yesnoquit  exits 0 yes pressed, 2 no , 3 quit
+	bmtPromptFunc yesnoquit
+		case $? in
+		0)
+			ReadConfigFileFunc
+		;;
+		2)
+			DisplayDialogMenuFunc
+		;;
+		3)
+			clear
+			bmtPrintFunc b_yellow "Ccryptmenu: User has quit."
+			exit 0
+		;;
+		*)
+			bmtPrintFunc red "Ccryptmenu: Error 5: Unknown Selection"
+			bmtPrintFunc norm "Done!"
+			bmtPromptFunc anykey
+			exit 5
+		;;
+	esac
+	
+	# Is the file there?
+	if [ -f "$MYCCFILE"  ] 
+	 then 
+		bmtPrintFunc norm "$MYCCFILE Found file!" 
+	 else
+		bmtPrintFunc red "Ccryptmenu: Error 6: $MYCCFILE File not found!"
+		exit 6
+	 fi
+	 
+	DisplayMenuOptionFunc
+done
+}
+
+# FUNCTION NAME : DisplayMenuOptionFunc
+# DESCRIPTION :  Function to display the menu options
+function DisplayMenuOptionFunc
+{
+ local choiceCcVar=""
+ # Display the menu
+ bmtPrintFunc b_cyan "Ccrypt - encrypt and decrypt files Menu options:-"
+local optionsccArr=("Encrypt a file " "Decrypt a file" "View encrypted file" \
+"Edit decrypted file " "Change the key of encrypted file" "Decrypt, Edit and Encrypt a file" "Quit")
+	select choiceCcVar in "${optionsccArr[@]}"
+	do
+	case "$choiceCcVar" in 
+	"${optionsccArr[0]}") #Encrypt.
+		bmtPrintFunc norm "Ecrypt a file, ccrypt -e"
+		ccrypt -e "$MYCCFILE"
+	;;
+	"${optionsccArr[1]}") #Decrypt
+		bmtPrintFunc norm "Decrypt a file, ccrypt -d"
+		ccrypt -d "$MYCCFILE"
+	;;
+	"${optionsccArr[2]}") #Decrypt  files to standard output.
+		bmtPrintFunc norm "Decrypt file to standard output., ccrypt -c"
+		ccrypt -c "$MYCCFILE"
+	;;
+	"${optionsccArr[3]}") #Edit a Decrypted file
+		bmtPrintFunc norm "Edit a Decrypted file with text editor."
+		$EDITOR "$MYCCFILE"
+	;;
+	"${optionsccArr[4]}") #Change the key of encrypted data
+		bmtPrintFunc norm "Change the key of encrypted file, ccrypt -x"
+		ccrypt -x "$MYCCFILE"
+	;;
+	"${optionsccArr[5]}") # Decrypt edit encrypt in one pass
+		bmtPrintFunc norm "Decrypt a file, ccrypt -d"
+		ccrypt -d "$MYCCFILE"
+		# extract the filename 
+		MYCCFILE=$(echo "$MYCCFILE" | cut -d'.' -f1)
+		bmtPrintFunc norm "Do you want to continue? [Y/n]"
+		bmtPromptFunc yesno "yes"
+		case $? in
+		0) #yes
+			bmtPrintFunc norm "Edit a Decrypted file with text editor."
+			$EDITOR "$MYCCFILE"
+			bmtPrintFunc norm "Ecrypt a file, ccrypt -e"
+			ccrypt -e "$MYCCFILE"
+		;;
+		2) #no
+			clear
+			bmtPrintFunc b_yellow "Ccryptmenu: quit pressed."
+			exit 0
+		;;
+		esac
+
+	;;
+	*)  #exit  
+		clear
+		bmtPrintFunc b_yellow "Ccryptmenu: User has quit."
+		exit 0 
+	;;
+	esac
+	break
+	done
+	bmtPrintFunc norm "Done!"
+	bmtPromptFunc anykey
+	clear
+}
+
+# FUNCTION NAME : DisplayDialogMenuFunc
+# DESCRIPTION :  Function to display the dilaog menu to pick files
+function DisplayDialogMenuFunc
+{
+	#prompt for manual file path
+	MYCCFILE=$(dialog --title "CcryptMenu" --output-fd 1 --begin 1 1 --cancel-label "Exit" --title  "Select Directory path:" --dselect / 10 40)
+	case $? in
+		0)
+			clear
+		;;
+		1)
+			clear
+			bmtPrintFunc b_yellow "Ccryptmenu: Exit pressed."
+			exit 0
+		;;
+		255)
+			clear
+			bmtPrintFunc b_yellow "Ccryptmenu: Esc pressed."
+			exit 0
+		;;
+	esac
+	
+	if [ ! -d "$MYCCFILE" ]
+	then
+		bmtPrintFunc red "Ccryptmenu: Error 7: Path not Found: $MYCCFILE"
+		exit 7
+	fi
+	cd "$MYCCFILE" || exit 7 
+	bmtPrintFunc b_cyan "Contents of $MYCCFILE "
+	ls -la
+	bmtPrintFunc b_cyan "Type the file name  you want to work with:-"
+	read -r MYCCFILE
+	}
+
+# FUNCTION NAME :  CheckPacFunc
+# DESCRIPTION :  Function to check if dependencies installed
+function CheckPacFunc
+{
+	clear
+	bmtPrintFunc b_cyan "Check dependency packages Installed"
+	bmtLinuxFunc distrocheck
+	LINUXDISTRO=$?
+	local choice=4
+	case $LINUXDISTRO  in
+		5)
+			choice=1 # pacman
+		;;
+		4)
+			choice=2 # debian
+		;;
+		2)
+			choice=3 # rpm
+		;;
+		*)
+			choice=4 # Unknown
+			bmtPrintFunc b_yellow "unknown Distro"
+		;;
+	esac
+	if [ $choice != 4 ]
+	then 
+		bmtLinuxFunc checkpac "ccrypt"  $choice  "MES"
+		bmtLinuxFunc checkpac "dialog"  $choice "MES"
+		bmtLinuxFunc checkpac "bashmultitool"  $choice "MES"
+	fi
+	bmtPromptFunc anykey
+}
+
+# FUNCTION NAME :   ReadConfigFileFunc
+# DESCRIPTION : Check if config file is there and source it
+function ReadConfigFileFunc
+{
+			if [ ! -d "$CONFIGPATH" ]
+			then
+				bmtPrintFunc red "Ccryptmenu: Error 3: Path not Found: $CONFIGPATH"
+				exit 3
+			else 
+				cd "$CONFIGPATH" || exit 3
+			fi
+			
+			if [ ! -f $CONFIGFILE ]
+			then  
+				#file not there 
+				bmtPrintFunc red "Ccryptmenu: Error 4: File not Found: $CONFIGPATH"
+				exit 4
+			fi
+			source $CONFIGFILE 
+}
+
+# FUNCTION NAME :  PrintScreenFunc
+# DESCRIPTION : Function to display opening title
+function PrintScreenFunc
+{
+	#Display opening screen title 
+	clear
+	bmtPromptFunc line "="
+	bmtPrintFunc b_cyan "                                  _    __  __                     "
+	bmtPrintFunc b_cyan "                                 | |  |  \/  |                    "
+	bmtPrintFunc b_cyan "    ___  ___  _ __  _   _  _ __  | |_ | \  / |  ___  _ __   _   _ "
+	bmtPrintFunc b_cyan "   / __|/ __|| '__|| | | || '_ \ | __|| |\/| | / _ \| '_ \ | | | |"
+	bmtPrintFunc b_cyan "  | (__| (__ | |   | |_| || |_) || |_ | |  | ||  __/| | | || |_| |"
+	bmtPrintFunc b_cyan "   \___|\___||_|    \__, || .__/  \__||_|  |_| \___||_| |_| \__,_|"
+	bmtPrintFunc b_cyan "                     __/ || |                                     "
+	bmtPrintFunc b_cyan "                    |___/ |_|                                     "
+	bmtPromptFunc line "="
+	bmtPrintFunc  norm "CcryptMenu: encrypt and decrypt files."
+	bmtPrintFunc  norm "Version: 1.0"
+	bmtPrintFunc  norm "Help: https://github.com/gavinlyonsrepo/ccryptmenu"
+	bmtPrintFunc  norm "DateTime: $(date +%T-%d-%a-Week%U-%b-%Y)"
+	bmtPrintFunc  norm "Unix epoch time: $(date +%s)     "
+	bmtPromptFunc line "="
+}
+
+# ==================MAIN CODE LOOP ====================================
+
+CheckPacFunc
+ccryptFunc
+
+# ======================END==============================
