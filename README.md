@@ -10,15 +10,11 @@ Overview
 Table of contents
 ---------------------------
 
-  * [Overview](#overview)
-  * [Table of contents](#table-of-contents)
   * [Installation](#installation)
   * [Usage](#usage)
   * [Files and setup](#files-and-setup)
   * [Dependencies](#dependencies)
   * [Features](#features)
-  * [Return codes](#return-codes)
-
 
 
 Installation
@@ -37,13 +33,13 @@ sudo make install
 
 Usage
 -------------------------------------------
-type in terminal:
+Type in terminal:
 
 ```sh
 ccryptmenu
 ```
 
-Type "ccryptmenu" in a terminal to run or select the icon.
+Or select the icon.
 The program installs an icon in system application menus under system.
 
 ﻿![icon](https://raw.githubusercontent.com/gavinlyonsrepo/ccryptmenu/master/desktop/ccryptmenuicon.png)
@@ -70,12 +66,3 @@ Features
 ----------------------
 
 ﻿![ss](https://raw.githubusercontent.com/gavinlyonsrepo/ccryptmenu/master/screenshot/Screenshot.png)
-
-Return codes
----------------------
-Return 0 Controlled exit: User pressed quit from Menus or escape or exit.  
-Return 3 ERROR : 3 Path not found to configfile directory.
-Retrun 4 ERROR : 4 Config file not found at configfile path directory.
-Return 5 ERROR : 5 Unknown error from file option selection(failsafe).
-Return 6 ERROR : 6 Chosen *.cpt file not found.
-Return 7 ERROR : 7 Chosen file not found, from dialog menu.
