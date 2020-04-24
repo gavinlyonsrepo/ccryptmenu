@@ -20,10 +20,10 @@ Table of contents
 Installation
 -----------------------------------------------
 
-Install by makefile
+Install by makefile on Linux OS.
 
 Download latest fixed release and run the makefile as per 
-terminal commands below for version 1.0 latest release at time of writing.
+terminal commands below for version 1.0, latest release at time of writing.
 
 ```sh
 curl -sL https://github.com/gavinlyonsrepo/ccryptmenu/archive/1.0.tar.gz | tar xz
@@ -39,8 +39,7 @@ Type in terminal:
 ccryptmenu
 ```
 
-Or select the icon.
-The program installs an icon in system application menus under system.
+Or select the icon. The program installs an icon in system application menus.
 
 ﻿![icon](https://raw.githubusercontent.com/gavinlyonsrepo/ccryptmenu/master/desktop/ccryptmenuicon.png)
 
@@ -51,18 +50,20 @@ Files and setup
 Configfile at $HOME/.config/ccryptmenu/ccryptmenu.cfg
 
 Config file contains MYCCFILE variable, full path to file.
-Example config file in documentation section.
+Example config file and return codes in documentation section.
 
 Uses the $EDITOR variable for text editor, if not set it uses NANO as default.
 
 Dependencies
 -------------------------------------
 
-1. [ccrypt](http://ccrypt.sourceforge.net/) 
-2. [bashmultitool](https://github.com/gavinlyonsrepo/bashmultitool) , Bash library , NOTE: written by Author.
-3. [dialog](https://www.linuxjournal.com/article/2807) , For menu selection for file.
+1. [ccrypt](http://ccrypt.sourceforge.net/) ,  v1.1.0
+2. [bashmultitool](https://github.com/gavinlyonsrepo/bashmultitool) , v1.5 Bash library , NOTE: written by Author.
+3. [dialog](https://www.linuxjournal.com/article/2807) , v1.3 , optional For menu selection for non-config file path.
 
 Features
 ----------------------
+
+Main menu options.
 
 ﻿![ss](https://raw.githubusercontent.com/gavinlyonsrepo/ccryptmenu/master/screenshot/Screenshot.png)
