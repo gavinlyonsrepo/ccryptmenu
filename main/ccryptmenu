@@ -1,137 +1,63 @@
 #!/bin/bash
+#shellcheck disable=SC1090
 
-#========================= HEADER ======================================
-#Title : cylonmenu
-#Description: wrapper for ccrypt , bash
-#License: see license.md 
+# === HEADER ===
+#Title : ccryptmenu
+#Description: Wrapper for ccrypt , written in bash
 #Written by Gavin lyons 
 #Software repo: https://github.com/gavinlyonsrepo/ccryptmenu
 
-#======================= GLOBAL VARIABLES   ============================
-LIBPATH="/usr/lib/bashmultitool/"
+# === GLOBAL VARIABLES   ===
 
 # Path for config file
-CONFIGPATH="$HOME/.config/ccryptmenu/"
-CONFIGFILE="ccryptmenu.cfg"
-mkdir -p "$CONFIGPATH"
-
-MYCCFILE=""
+CM_CONFIGPATH="$HOME/.config/ccryptmenu/"
+CM_CONFIGFILE="ccryptmenu.cfg"
+mkdir -vp "$CM_CONFIGPATH"
+CM_ACTIVEFILE="" # Active file read from config file
 
 # Prompt for select menus
 PS3="$(printf "\033[36;1m")By your command:$(printf "\033[0m")"
 
 # check if $EDITOR Environmental variable is set if not set it to nano
-# used for modifying config files
+# used for modifying config file
 [ -z "${EDITOR}" ] && EDITOR="nano"
 
-#===================== LIBS ============================================
-for MYFILE in "$LIBPATH"*;
+# === LIBS ====
+# Source the bashMultiTool library 
+BMT_LIBPATH="/usr/lib/bashmultitool/"
+for BMT_MYFILE in "$BMT_LIBPATH"*;
 do
-	source "$MYFILE"
+	source "$BMT_MYFILE"
 done
 
-# ==================== FUNCTIONS =======================================
-
-# FUNCTION NAME : ccryptFunc
-# DESCRIPTION : Main Function to use ccrypt encrypt and decrypt files
-function ccryptFunc
-{
-while true; do
-	PrintScreenFunc
-	bmtPrintFunc norm "Do you want to use the path(MYCCFILE) defined in Config file  [y/n/q]"
-	#if bmtPrintFunc yesnoquit  exits 0 yes pressed, 2 no , 3 quit
-	bmtPromptFunc yesnoquit
-		case $? in
-		0)
-			ReadConfigFileFunc
-		;;
-		2)
-			DisplayDialogMenuFunc
-		;;
-		3)
-			clear
-			bmtPrintFunc b_yellow "Ccryptmenu: User has quit."
-			exit 0
-		;;
-		*)
-			bmtPrintFunc red "Ccryptmenu: Error 5: Unknown Selection"
-			bmtPrintFunc norm "Done!"
-			bmtPromptFunc anykey
-			exit 5
-		;;
-	esac
-	
-	# Is the file there?
-	if [ -f "$MYCCFILE"  ] 
-	 then 
-		bmtPrintFunc norm "$MYCCFILE Found file!" 
-	 else
-		bmtPrintFunc red "Ccryptmenu: Error 6: $MYCCFILE File not found!"
-		exit 6
-	 fi
-	 
-	DisplayMenuOptionFunc
-done
-}
+# === FUNCTIONS ===
 
 # FUNCTION NAME : DisplayMenuOptionFunc
-# DESCRIPTION :  Function to display the menu options
+# DESCRIPTION :  Function to display the main menu options
 function DisplayMenuOptionFunc
 {
  local choiceCcVar=""
  # Display the menu
- bmtPrintFunc b_cyan "Ccrypt - encrypt and decrypt files Menu options:-"
+ bmtPrintFunc b_cyan "Main Menu options:-"
 local optionsccArr=("Encrypt a file " "Decrypt a file" "View encrypted file" \
-"Edit decrypted file " "Change the key of encrypted file" "Decrypt, Edit and Encrypt a file" "Quit")
+	"Edit decrypted file " "Change the key of encrypted file" "Decrypt, Edit and Encrypt a file" \
+	"Depends check" "Edit config file" "Change Active file" "Exit")
 	select choiceCcVar in "${optionsccArr[@]}"
 	do
 	case "$choiceCcVar" in 
-	"${optionsccArr[0]}") #Encrypt.
-		bmtPrintFunc norm "Ecrypt a file, ccrypt -e"
-		ccrypt -e "$MYCCFILE"
-	;;
-	"${optionsccArr[1]}") #Decrypt
-		bmtPrintFunc norm "Decrypt a file, ccrypt -d"
-		ccrypt -d "$MYCCFILE"
-	;;
-	"${optionsccArr[2]}") #Decrypt  files to standard output.
-		bmtPrintFunc norm "Decrypt file to standard output., ccrypt -c"
-		ccrypt -c "$MYCCFILE"
-	;;
-	"${optionsccArr[3]}") #Edit a Decrypted file
-		bmtPrintFunc norm "Edit a Decrypted file with text editor."
-		$EDITOR "$MYCCFILE"
-	;;
-	"${optionsccArr[4]}") #Change the key of encrypted data
-		bmtPrintFunc norm "Change the key of encrypted file, ccrypt -x"
-		ccrypt -x "$MYCCFILE"
-	;;
-	"${optionsccArr[5]}") # Decrypt edit encrypt in one pass
-		bmtPrintFunc norm "Decrypt a file, ccrypt -d"
-		ccrypt -d "$MYCCFILE"
-		# extract the filename 
-		MYCCFILE=$(echo "$MYCCFILE" | cut -d'.' -f1)
-		bmtPrintFunc norm "Do you want to continue? [Y/n]"
-		bmtPromptFunc yesno "yes"
-		case $? in
-		0) #yes
-			bmtPrintFunc norm "Edit a Decrypted file with text editor."
-			$EDITOR "$MYCCFILE"
-			bmtPrintFunc norm "Ecrypt a file, ccrypt -e"
-			ccrypt -e "$MYCCFILE"
-		;;
-		2) #no
-			clear
-			bmtPrintFunc b_yellow "Ccryptmenu: quit pressed."
-			exit 0
-		;;
-		esac
-
-	;;
+	"${optionsccArr[0]}") noncptFileFunc  ;; #Encrypt 
+	"${optionsccArr[1]}") cptFileFunc  ;;  #Decrypt
+	"${optionsccArr[2]}") cptFileFunc "standout"  ;;  #Decrypt  files to standard output.
+	"${optionsccArr[3]}") noncptFileFunc  "editfile"  ;; # Edit a Decrypted file
+	"${optionsccArr[4]}") cptFileFunc  "changekey" ;; # Change the key of encrypted data
+	"${optionsccArr[5]}") EditActiveFileFunc ;; # Decrypt edit encrypt in one pass
+	"${optionsccArr[6]}") CheckPacFunc ;; 
+	"${optionsccArr[7]}") EditConfigFileFunc;;
+	"${optionsccArr[8]}") DisplayDialogMenuFunc ;;
 	*)  #exit  
 		clear
-		bmtPrintFunc b_yellow "Ccryptmenu: User has quit."
-		exit 0 
+		bmtPrintFunc b_green "Ccryptmenu: User has quit."
+		exitHandlerFunc exitout
 	;;
 	esac
 	break
@@ -142,61 +68,50 @@ local optionsccArr=("Encrypt a file " "Decrypt a file" "View encrypted file" \
 }
 
 # FUNCTION NAME : DisplayDialogMenuFunc
-# DESCRIPTION :  Function to display the dilaog menu to pick files
+# DESCRIPTION :  Function to display the dialog menu to pick files
 function DisplayDialogMenuFunc
 {
 	#prompt for manual file path
-	MYCCFILE=$(dialog --title "CcryptMenu" --output-fd 1 --begin 1 1 --cancel-label "Exit" --title  "Select Directory path:" --dselect / 10 40)
+	CM_ACTIVEFILE=$(dialog --title "CcryptMenu" --output-fd 1 --begin 1 1 --cancel-label "Exit" --title  "Select File:" --fselect / 10 40)
 	case $? in
-		0)
-			clear
-		;;
+		0) 
+			clear 
+			[ ! -f "$CM_ACTIVEFILE" ] && exitHandlerFunc 7
+			bmtPrintFunc norm "New active file = $CM_ACTIVEFILE"
+			bmtPrintFunc norm "Note :: If user encrypts or decrypts this file config file will be updated"
+			bmtPrintFunc norm "View or change key will not effect config file"
+			;;
 		1)
 			clear
 			bmtPrintFunc b_yellow "Ccryptmenu: Exit pressed."
-			exit 0
+			exitHandlerFunc exitout
 		;;
 		255)
 			clear
 			bmtPrintFunc b_yellow "Ccryptmenu: Esc pressed."
-			exit 0
+			exitHandlerFunc exitout
 		;;
 	esac
 	
-	if [ ! -d "$MYCCFILE" ]
-	then
-		bmtPrintFunc red "Ccryptmenu: Error 7: Path not Found: $MYCCFILE"
-		exit 7
-	fi
-	cd "$MYCCFILE" || exit 7 
-	bmtPrintFunc b_cyan "Contents of $MYCCFILE "
-	ls -la
-	bmtPrintFunc b_cyan "Type the file name  you want to work with:-"
-	read -r MYCCFILE
-	}
+}
 
 # FUNCTION NAME :  CheckPacFunc
 # DESCRIPTION :  Function to check if dependencies installed
 function CheckPacFunc
 {
 	clear
+	local choice=4
 	bmtPrintFunc b_cyan "Check dependency packages Installed"
 	bmtLinuxFunc distrocheck
-	LINUXDISTRO=$?
-	local choice=4
-	case $LINUXDISTRO  in
-		5)
-			choice=1 # pacman
-		;;
-		4)
-			choice=2 # debian
-		;;
-		2)
-			choice=3 # rpm
-		;;
+	
+	case "$?"  in
+		5) choice=1 ;; # pacman 
+		4) choice=2 ;; # debian
+		2) choice=3 ;; # rpm
 		*)
 			choice=4 # Unknown
-			bmtPrintFunc b_yellow "unknown Distro"
+			bmtPrintFunc norm "Dependency packages are ccrypt, dialog and  bashmulitool"
+			bmtPrintFunc norm "Unable to carry out installation check"
 		;;
 	esac
 	if [ $choice != 4 ]
@@ -205,28 +120,56 @@ function CheckPacFunc
 		bmtLinuxFunc checkpac "dialog"  $choice "MES"
 		bmtLinuxFunc checkpac "bashmultitool"  $choice "MES"
 	fi
-	bmtPromptFunc anykey
 }
 
 # FUNCTION NAME :   ReadConfigFileFunc
 # DESCRIPTION : Check if config file is there and source it
-function ReadConfigFileFunc
+function ReadConfigFileFunc   
 {
-			if [ ! -d "$CONFIGPATH" ]
-			then
-				bmtPrintFunc red "Ccryptmenu: Error 3: Path not Found: $CONFIGPATH"
-				exit 3
-			else 
-				cd "$CONFIGPATH" || exit 3
-			fi
-			
-			if [ ! -f $CONFIGFILE ]
-			then  
-				#file not there 
-				bmtPrintFunc red "Ccryptmenu: Error 4: File not Found: $CONFIGPATH"
-				exit 4
-			fi
-			source $CONFIGFILE 
+	
+	if [ ! -d "$CM_CONFIGPATH" ] # 1. Check configfile path
+	then
+		exitHandlerFunc 3
+	else 
+		cd "$CM_CONFIGPATH" || exitHandlerFunc 3
+	fi
+	
+	if [ ! -f "$CM_CONFIGFILE" ] #2. Check config file
+	then  #  config file not found
+		# 1. create config file
+		bmtPrintFunc b_yellow "Warning :: Config File not found :: creating it ::"
+		bmtPrintFunc norm "$CM_CONFIGPATH$CM_CONFIGFILE"
+		touch "$CM_CONFIGFILE" 
+		# 2. Fill config file with a dummy active file
+		echo "CM_ACTIVEFILE=$HOME/.config/ccryptmenu/dummyActiveFile" | tee  "$CM_CONFIGFILE"  >/dev/null
+		source "$CM_CONFIGFILE"
+		touch dummyActiveFile
+		echo "test" > dummyActiveFile
+		bmtPromptFunc anykey " "
+	else  #  config file found 
+		bmtPrintFunc norm "Found config file reading it into memory"
+		bmtPrintFunc norm "$CM_CONFIGPATH$CM_CONFIGFILE"
+		source "$CM_CONFIGFILE"
+	fi
+	 
+	if [ -f "$CM_ACTIVEFILE"  ]  # 3 Check config file contents
+	 then 
+		bmtPrintFunc norm "$CM_ACTIVEFILE Found file!" 
+	 else
+		exitHandlerFunc 6
+	 fi
+}
+
+# FUNCTION NAME : EditConfigFileFunc
+# DESCRIPTION :  Function to edit config file
+function EditConfigFileFunc
+{
+	cd "$CM_CONFIGPATH"  || exitHandlerFunc 3
+	bmtPrintFunc norm "Editing Config file at :: $CM_CONFIGPATH$CM_CONFIGFILE" 
+	bmtPromptFunc anykey 
+	$EDITOR "$CM_CONFIGFILE" || exitHandlerFunc 4
+	bmtPrintFunc norm "Config file edit over :: exiting :: Please restart"
+	exitHandlerFunc exitout
 }
 
 # FUNCTION NAME :  PrintScreenFunc
@@ -236,7 +179,7 @@ function PrintScreenFunc
 	#Display opening screen title 
 	clear
 	bmtPromptFunc line "="
-	bmtPrintFunc b_cyan "                                  _    __  __                     "
+	bmtPrintFunc b_cyan "                                 __    __  __                     "
 	bmtPrintFunc b_cyan "                                 | |  |  \/  |                    "
 	bmtPrintFunc b_cyan "    ___  ___  _ __  _   _  _ __  | |_ | \  / |  ___  _ __   _   _ "
 	bmtPrintFunc b_cyan "   / __|/ __|| '__|| | | || '_ \ | __|| |\/| | / _ \| '_ \ | | | |"
@@ -245,17 +188,148 @@ function PrintScreenFunc
 	bmtPrintFunc b_cyan "                     __/ || |                                     "
 	bmtPrintFunc b_cyan "                    |___/ |_|                                     "
 	bmtPromptFunc line "="
-	bmtPrintFunc  norm "CcryptMenu: encrypt and decrypt files."
-	bmtPrintFunc  norm "Version: 1.0"
-	bmtPrintFunc  norm "Help: https://github.com/gavinlyonsrepo/ccryptmenu"
-	bmtPrintFunc  norm "DateTime: $(date +%T-%d-%a-Week%U-%b-%Y)"
-	bmtPrintFunc  norm "Unix epoch time: $(date +%s)     "
-	bmtPromptFunc line "="
+	bmtMiscFunc title 6 7  '#' "AF: $CM_ACTIVEFILE " 
 }
 
-# ==================MAIN CODE LOOP ====================================
+#FUNCTION HEADER
+# NAME :   checkInputFunc
+# DESCRIPTION: CHECK INPUT OPTIONS from linux command line arguments passed to program on call
+# INPUTS :  $1 user input option 
+function checkInputFunc
+{
+	
+case "$1" in
+	-d|--depends) CheckPacFunc ; 	bmtPromptFunc anykey;;
+	-v|--version) bmtPrintFunc norm "ccryptmenu :: version 1.1" ;;
+	
+	-h|--help)
+		bmtPrintFunc norm "ccryptmenu :: Help"
+		bmtPrintFunc norm "URL :: https://github.com/gavinlyonsrepo/ccryptmenu"
+		bmtPrintFunc norm "Readme :: /usr/share/doc/ccryptmenu/README.md"
+	;;
+	-c|--config)
+		EditConfigFileFunc
+	;;
+	*)
+		exitHandlerFunc 8 "$1"
+	;;
+esac
 
-CheckPacFunc
-ccryptFunc
+exitHandlerFunc exitout
+}
 
-# ======================END==============================
+# FUNCTION NAME : EditActiveFileFunc
+# DESCRIPTION :  Decrypt  edit and encrypt the active file
+function EditActiveFileFunc
+{
+		if  cptFileFunc
+		then
+			noncptFileFunc  "editfile" 
+			noncptFileFunc
+		fi  
+}
+
+# FUNCTION NAME :  exitHandlerFunc 
+# DESCRIPTION: error handler deal with user exit from program
+# INPUTS:  $1  Error type ,, $2  invalid option error for 8
+function exitHandlerFunc
+{
+	case "$1" in
+		exitout) # non error exit 0
+			bmtPrintFunc b_green "Goodbye $USER!"
+			bmtPromptFunc anykey "and exit." b_green
+			exit 0 
+		;;
+		3) 
+			bmtPrintFunc b_red "ERROR :: $1 :: Path not found to configfile dir." 
+			bmtPrintFunc norm " $CM_CONFIGPATH"
+		;;
+		4)  
+			bmtPrintFunc b_red "ERROR :: $1 :: Config file not found at configfile path directory" 
+			bmtPrintFunc norm " $CM_CONFIGPATH$CM_CONFIGFILE"
+		;;
+		5) bmtPrintFunc b_red "ERROR :: $1 :: File option selection problem" ;;
+		6) 
+			bmtPrintFunc b_red "ERROR :: $1 :: Chosen Active File from config file not found!"
+			bmtPrintFunc norm  "$CM_ACTIVEFILE"
+		;;
+		7) 
+			bmtPrintFunc b_red  "ERROR :: $1 :: Chosen file not found, from dialog menu" 
+			bmtPrintFunc norm  "$CM_ACTIVEFILE"
+		;;
+		8)
+			bmtPrintFunc b_red  "ERROR :: $1 :: Invalid option :: $2"
+			bmtPrintFunc norm "Usage :: -h = help , -v = version ,  -d = depends check "
+			bmtPrintFunc norm " -c = config file edit"
+		;;
+		*) bmtPrintFunc yellow "ERROR :: Unknown input to error handler :: $1";;
+	 esac
+	 
+	bmtPromptFunc anykey "and exit." b_yellow
+	exit "$1"
+}
+
+function noncptFileFunc
+{
+	local filenameVar 
+	# check for cpt if yes skip 
+	filenameVar="$(basename "$CM_ACTIVEFILE")"
+	filenameVar="${filenameVar##*.}" #  parameter expansion retain after .
+	
+	if [ "$filenameVar" != "cpt" ] 
+	then 
+		if [  "$1" == "editfile" ]
+		then
+			bmtPrintFunc norm "Edit a Decrypted file with text editor."
+			$EDITOR "$CM_ACTIVEFILE"
+		else
+			bmtPrintFunc norm "Ecrypt a file, ccrypt -e"
+			ccrypt -e "$CM_ACTIVEFILE" || return 3
+			CM_ACTIVEFILE="$CM_ACTIVEFILE.cpt"
+			echo "CM_ACTIVEFILE=$CM_ACTIVEFILE"  > "$CM_CONFIGPATH$CM_CONFIGFILE"
+		fi
+	else
+		bmtPrintFunc b_yellow "Encrypted .cpt file picked , skipping"
+	fi
+}
+
+function cptFileFunc
+{
+	local filenameVar
+	filenameVar="$(basename "$CM_ACTIVEFILE")"
+	filenameVar="${filenameVar##*.}" #  parameter expansion retain after .
+	if [ "$filenameVar" == "cpt" ] 
+	then 
+		if [ "$1" == "standout" ] #  decrypt the file to stdout 
+		then 
+			bmtPrintFunc norm "Decrypt file to standard output., ccrypt -c"
+			ccrypt -c "$CM_ACTIVEFILE" || return 3
+		elif [ "$1" == "changekey" ] # change the key
+		then 
+			bmtPrintFunc norm "Change the key of encrypted file, ccrypt -x"
+			ccrypt -x "$CM_ACTIVEFILE" || return 3
+		else # decrypt the file 
+			bmtPrintFunc norm "Decrypt a file, ccrypt -d"
+			ccrypt -d "$CM_ACTIVEFILE"  || return 3
+			CM_ACTIVEFILE="${CM_ACTIVEFILE%.*}" # parameter expansion remove extension
+			echo "CM_ACTIVEFILE=$CM_ACTIVEFILE"  > "$CM_CONFIGPATH$CM_CONFIGFILE"
+		fi
+	else
+		bmtPrintFunc b_yellow "Decrypted file  picked, skipping"
+		return 4
+	fi
+}
+
+
+# === MAIN CODE LOOP ===
+
+[ -n "$1" ] && checkInputFunc "$1"
+ReadConfigFileFunc 
+
+while true
+ do
+	PrintScreenFunc
+	DisplayMenuOptionFunc
+done
+
+# === END ===
