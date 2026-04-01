@@ -118,7 +118,11 @@ function CheckPacFunc
 	then 
 		bmtLinuxFunc checkpac "ccrypt"  $choice  "MES"
 		bmtLinuxFunc checkpac "dialog"  $choice "MES"
-		bmtLinuxFunc checkpac "bashmultitool"  $choice "MES"
+		if command -v bashmultitool >/dev/null 2>&1; then
+			echo "bashmultitool installed"
+		else
+			echo "bashmultitool uninstalled"
+		fi
 	fi
 }
 
@@ -188,7 +192,7 @@ function PrintScreenFunc
 	bmtPrintFunc b_cyan "                     __/ || |                                     "
 	bmtPrintFunc b_cyan "                    |___/ |_|                                     "
 	bmtPromptFunc line "="
-	bmtMiscFunc title 6 7  '#' "AF: $CM_ACTIVEFILE " 
+	bmtDrawFunc title 6 7  '#' "AF: $CM_ACTIVEFILE " 
 }
 
 #FUNCTION HEADER

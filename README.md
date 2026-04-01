@@ -22,8 +22,8 @@ Installation
 Install by makefile on Linux OS.
 
 ```sh
-curl -sL https://github.com/gavinlyonsrepo/ccryptmenu/archive/1.1.tar.gz | tar xz
-cd ccryptmenu-1.1
+curl -sL https://github.com/gavinlyonsrepo/ccryptmenu/archive/1.2.0.tar.gz | tar xz
+cd ccryptmenu-1.2.0
 sudo make install
 ```
 
@@ -54,7 +54,7 @@ Dependencies
 -------------------------------------
 
 1. [ccrypt](http://ccrypt.sourceforge.net/) ,  v1.11
-2. [bashmultitool](https://github.com/gavinlyonsrepo/bashmultitool) , v2.0 Bash library , NOTE: written by Author.
+2. [bashmultitool](https://github.com/gavinlyonsrepo/bashmultitool) , v2.2 Bash library , NOTE: written by Author.
 3. [dialog](https://www.linuxjournal.com/article/2807) , v1.3 , optional For menu selection for change active  file path.
 
 Features
