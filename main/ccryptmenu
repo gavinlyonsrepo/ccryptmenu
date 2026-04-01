@@ -204,7 +204,7 @@ function checkInputFunc
 	
 case "$1" in
 	-d|--depends) CheckPacFunc ; 	bmtPromptFunc anykey;;
-	-v|--version) bmtPrintFunc norm "ccryptmenu :: version 1.1" ;;
+	-v|--version) bmtPrintFunc norm "ccryptmenu :: version 1.2.0" ;;
 	
 	-h|--help)
 		bmtPrintFunc norm "ccryptmenu :: Help"
